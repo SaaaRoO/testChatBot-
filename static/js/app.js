@@ -1,5 +1,5 @@
 document.getElementById('send-button').addEventListener('click', function() {
-    const userInput = document.getElementById('user-input').value;
+    const userInput = document.getElementById(' user-input').value;
     const fileInput = document.getElementById('file-input').files[0];
     const chatHistory = document.getElementById('chat-history');
 
