@@ -3,58 +3,71 @@ import os
 import google.generativeai as genai
 
 app = Flask(__name__)
+# Configure the folder where uploaded files will be stored
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 
 # Configure your API key here
-genai.configure(api_key='AIzaSyDK4uGN2hWp6cdrug9t0IHXa0L6UB6DrBs')
+genai.configure(api_key='YOUR_API_KEY_HERE')  # Replace with your actual API key
 
-# Define the generation config
-generation_config = {
-    "temperature":0.4,
-    "top_p": 0.95,
-    "top_k": 40,
-    "max_output_tokens": 8192,
-    "response_mime_type": "text/plain",
-}
-
+# Initialize the generative model
 model = genai.GenerativeModel(
-    model_name="gemini-1.5-pro-002",
-    generation_config=generation_config,
+    model_name="gemini-1.5-pro-002",  # Specify the model to use
 )
+
+# Initialize an empty list to store the conversation history
+conversation_history = []
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Render the main chat interface
+    return render_template('index.html', history=conversation_history)
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    data = request.get_json()
-    user_input = data.get('user_input')
+    # Handle incoming chat messages
+    data = request.get_json()  # Parse the JSON data from the request
+    user_input = data.get('user_input')  # Extract user input
 
+    # Check if user input is provided
     if not user_input:
         return jsonify({"error": "No user input provided."}), 400
 
-    chat_session = model.start_chat(history=[])
-    response = chat_session.send_message(user_input)
+    # Create a context string from conversation history for better responses
+    context = " ".join([f"User: {msg['user']}\nBot: {msg['bot']}" for msg in conversation_history])
+    context += f"\nUser: {user_input}"  # Add the current user input to the context
 
-    return jsonify({"response": response.text})
+    # Generate a response based on the full context
+    response = model.generate_content([context])
+    
+    # Store the conversation history
+    conversation_history.append({"user": user_input, "bot": response.text})  # Save the interaction
+
+    # Return the generated response and updated history as JSON
+    return jsonify({"response": response.text, "history": conversation_history})
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    # Handle file uploads
     if 'file' not in request.files:
-        return jsonify({"error": "No file part."}), 400
+        return jsonify({"error": "No file part."}), 400  # Error if no file part is found
 
-    file = request.files['file']
+    file = request.files['file']  # Get the uploaded file
     if file.filename == '':
-        return jsonify({"error": "No selected file."}), 400
+        return jsonify({"error": "No selected file."}), 400  # Error if no file was selected
 
+    # Save the uploaded file to the designated folder
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(file_path)
 
+    # Generate content based on the uploaded image
+    image_description = model.generate_content([file_path, "\n\n", "Please describe the content of this image."])
     
-    return jsonify({"message": "File uploaded successfully!", "filename": file.filename})
+    # Store the conversation history with the uploaded image information
+    conversation_history.append({"user": f"Uploaded: {file.filename}", "bot": image_description.text})
+
+    # Return a success message with the image description and updated history
+    return jsonify({"message": f"File '{file.filename}' uploaded successfully!", "description": image_description.text, "history": conversation_history})
 
 if __name__ == '__main__':
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    app.run(debug=True)
-
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)  # Create the upload folder if it doesn't exist
+    app.run(debug=True)  # Run the Flask app in debug mode

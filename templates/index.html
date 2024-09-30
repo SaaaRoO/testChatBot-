@@ -4,25 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
-    <title>AI Chat Assistant</title>
+    <title>Chatbot</title>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>AI Chat Assistant</h1>
-        </header>
-        <main class="chat-area">
-            <div id="chat-box" class="chat-box"></div>
-            <form id="chat-form" class="chat-form" onsubmit="sendMessage(event)">
-                <input type="text" id="user-input" class="input-field" placeholder="Type your message here..." required>
-                <input type="file" id="file-input" class="file-input" accept="image/*,video/*,audio/*">
-                <button type="submit" class="send-btn"><i class="fas fa-paper-plane"></i></button>
-            </form>
-        </main>
-        <footer class="footer">
-            <p>Powered by Google Generative AI</p>
-        </footer>
+    <div class="chat-container">
+        <div class="chat-history" id="chat-history">
+            {% for message in history %}
+                <div class="message user-message">{{ message.user }}</div>
+                <div class="message bot-message">{{ message.bot }}</div>
+            {% endfor %}
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your message..." />
+            <button id="send-button">Send</button>
+            <input type="file" id="file-input" />
+        </div>
     </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
