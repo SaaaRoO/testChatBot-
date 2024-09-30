@@ -6,8 +6,8 @@ app = Flask(__name__)
 # Configure the folder where uploaded files will be stored
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 
-# Configure your API key here
-genai.configure(api_key='YOUR_API_KEY_HERE')  # Replace with your actual API key
+# Configure API key here
+genai.configure(api_key='AIzaSyCrUBVHO0FVc8KBzJjuWow8uDay7iIwn-c') 
 
 # Initialize the generative model
 model = genai.GenerativeModel(
